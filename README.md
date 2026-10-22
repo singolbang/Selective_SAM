@@ -9,12 +9,12 @@ SAM 2.1 Tiny를 고정하고 depth adapter를 학습한 뒤, 입력에 따라 ad
 | SAM 2 소스 | [공식 저장소](https://github.com/facebookresearch/sam2) | `third_party/sam2/` |
 | SAM 2.1 Tiny | [공식 checkpoint](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt) | `checkpoints/sam2.1_hiera_tiny.pt` |
 | DeLiVER | [공식 저장소](https://github.com/InSAI-Lab/DELIVER) · [데이터 다운로드](https://huggingface.co/datasets/InSAI-Lab/DELIVER) | `data/DELIVER/` |
-| 학습한 adapter | [Google Drive](https://drive.google.com/file/d/1AWaKJVqYLmCI5NmN0AcWR0BnzHNU1O6t/view?usp=drive_link) | `checkpoints/adapter_best.pt` |
-| 학습한 선택기 | [GitHub Release](https://github.com/singolbang/Selective_SAM/releases/download/v1.0.0/gate_best.pt) | `checkpoints/gate_best.pt` |
+| 학습한 adapter | [GitHub Release](https://github.com/singolbang/Selective_SAM/releases/download/v1.0.1/adapter_best.pt) | `checkpoints/adapter_best.pt` |
+| 학습한 선택기 | [GitHub Release](https://github.com/singolbang/Selective_SAM/releases/download/v1.0.1/gate_best.pt) | `checkpoints/gate_best.pt` |
 
 DeLiVER 아카이브에서는 `img`, `depth`, `semantic` 폴더를 사용합니다. box는 데이터셋에 포함된 별도 주석이 아닙니다. `selective_sam/data.py`의 `targets_from_labels()`가 semantic label에서 만들며, `selective_sam/manifest.py`로 목록을 생성할 수 있습니다.
 
-선택기 가중치는 `GateBaselineSAM_v1`입니다. SHA256은 `e66a376b8570a198e540305e6efd1eef744e5b24c38718290e4a34cd9ee1df4a`입니다.
+가중치 SHA256은 adapter `b7d437c3383dcd8e872895eb10d2847e4524a9da2ce3ff3001dd92bd22dbe82b`, 선택기(`GateBaselineSAM_v1`) `e66a376b8570a198e540305e6efd1eef744e5b24c38718290e4a34cd9ee1df4a`입니다.
 
 Python 3.10, PyTorch 2.5.1/CUDA 12.1 환경에서 실행했습니다. SAM 2 소스는 커밋 `2b90b9f5ceec907a1c18123530e92e794ad901a4`를 사용했습니다.
 
