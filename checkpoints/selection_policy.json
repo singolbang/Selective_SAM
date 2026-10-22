@@ -1,0 +1,14 @@
+{
+  "mode": "selective",
+  "tau": 0.7000000000000003,
+  "damaged_iou": 0.8326324224472046,
+  "damaged_pairs": 6015,
+  "adapter_use_rate": 0.4749792186201164,
+  "epsilon": 0.0,
+  "validation_scope": "damaged_observed_pairs",
+  "validation_aggregation": "unweighted_target_mean",
+  "adapter_sha256": "b7d437c3383dcd8e872895eb10d2847e4524a9da2ce3ff3001dd92bd22dbe82b",
+  "sam_sha256": "7402e0d864fa82708a20fbd15bc84245c2f26dff0eb43a4b5b93452deb34be69",
+  "gate_baseline_source_sha256": "da36586fc3fd2bc7f37e9d9c680310c1f68d8096570e3e93fe8b1aec3a779ce8",
+  "selected_epoch": 3
+}

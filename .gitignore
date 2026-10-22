@@ -1,0 +1,13 @@
+/.venv
+/data
+/third_party
+/cache
+/manifests
+/runs
+/results
+/checkpoints/*.pt
+/checkpoints/*.pth
+__pycache__/
+*.py[cod]
+*.log
+.pytest_cache/

@@ -1,0 +1,63 @@
+seed: 20261019
+experiment:
+  name: severe_depth_v1
+  parent_config: configs/moderate.yaml
+  rationale: user_requested_stronger_damage_after_reviewing_initial_test
+  interpretation: exploratory_post_test_revision
+data:
+  root: data/DELIVER
+  official_code_commit: b3a76c33a7b22098b7285d845f22c910abc5cb16
+  view: front
+  use_full_official_splits: true
+  train_reused_for_adapter_and_gate: true
+  min_target_area: 256
+  max_targets_per_image: 3
+  target_selection: one_per_size_bin_medium_small_large_then_distinct_class_fill
+  small_area_fraction_lt: 0.005
+  medium_area_fraction_lt: 0.05
+  valid_semantic_ids: [1, 25]
+  ignore_semantic_ids: [0, 255]
+  depth: distributed_uint8_log_frame
+  depth_normalization: divide_by_255
+sam:
+  official_code_commit: 2b90b9f5ceec907a1c18123530e92e794ad901a4
+  config: configs/sam2.1/sam2.1_hiera_t.yaml
+  checkpoint: checkpoints/sam2.1_hiera_tiny.pt
+  checkpoint_sha256: 7402e0d864fa82708a20fbd15bc84245c2f26dff0eb43a4b5b93452deb34be69
+  image_size: 1024
+  device: cuda:0
+  precision: float32
+adapter:
+  feature_cache: cpu_float32_fixed_hash_subset_per_process
+  feature_cache_train_images: 512
+  feature_cache_val_images: 1024
+  sample_cache: cpu_uint8_depth_packed_binary_masks_per_process
+  initial_epochs: 30
+  initial_min_epochs: 15
+  epochs: 10
+  warmup_epochs: 2
+  min_epochs: 10
+  patience: 8
+  schedule_change_reason: user_requested_8_to_10_epochs_after_repeated_full_validation_gain
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  validation_every: 1
+  max_attempts: 2
+gate:
+  epochs: 20
+  warmup_epochs: 2
+  min_epochs: 10
+  patience: 6
+  learning_rate: 0.001
+  batch_size: 32
+  input_size: 128
+  epsilon: 0.0
+  max_attempts: 2
+  clean_weight: 0.5
+corruptions:
+  assignment: clean_all_plus_one_of_nine_damage_conditions_per_image_sha256
+  damaged_variants_per_image: 1
+  none: [0]
+  noise: [0.20, 0.45, 0.80]
+  pixel_dropout: [0.75, 0.90, 0.99]
+  region_dropout: [0.64, 0.81, 0.96]
