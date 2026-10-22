@@ -11,7 +11,7 @@ from .gate import gate_base, gate_input
 from .gate_baseline import GateBaselineSAM, baseline_hint
 from .gate_roi import roi_input
 from .gate_sam import sam_box_feature_tensor
-from .label_generation import load_adapter, sha256
+from .label_generation import load_adapter, sha256, source_sha256
 from .samples import adapter_depth
 
 
@@ -20,29 +20,41 @@ class SelectivePredictorBaseline:
                  adapter_path="checkpoints/adapter_best.pt", gate_path="checkpoints/gate_best.pt",
                  policy_path="checkpoints/selection_policy.json"):
         self.config = yaml.safe_load(Path(config_path).read_text())
-        self.gate_config = yaml.safe_load(Path(gate_config_path).read_text())
         self.model = load_adapter(self.config, Path(adapter_path))
-        saved = torch.load(gate_path, map_location="cpu", weights_only=False)
-        if (saved.get("architecture") != "GateBaselineSAM_v1" or
-                saved["gate_config"] != self.gate_config):
-            raise ValueError("Baseline-hint gate architecture/config mismatch")
-        gate_source_sha = sha256(Path("selective_sam/gate_baseline.py"))
+        self.gate_config_path = Path(gate_config_path)
+        self.adapter_path = Path(adapter_path)
+        self.gate_path = Path(gate_path)
+        self.policy_path = Path(policy_path)
+        self.gate_config = None
+        self.policy = None
+        self.gate = None
+
+    def _load_gate(self):
+        gate_config = yaml.safe_load(self.gate_config_path.read_text())
+        saved = torch.load(self.gate_path, map_location="cpu", weights_only=False)
+        if saved.get("architecture") != "GateBaselineSAM_v1":
+            raise ValueError(f"Gate checkpoint architecture {saved.get('architecture')!r}; "
+                             "expected 'GateBaselineSAM_v1'. Download the final baseline-hint gate checkpoint.")
+        if saved.get("gate_config") != gate_config:
+            raise ValueError("Baseline-hint gate config mismatch")
+        gate_source_sha = source_sha256(Path("selective_sam/gate_baseline.py"))
         if saved["gate_baseline_source_sha256"] != gate_source_sha:
             raise ValueError("Baseline-hint gate source changed since training")
-        self.policy = json.loads(Path(policy_path).read_text())
-        adapter_hash = sha256(Path(adapter_path))
+        policy = json.loads(self.policy_path.read_text())
+        adapter_hash = sha256(self.adapter_path)
         if (saved["adapter_sha256"] != adapter_hash or
-                self.policy["adapter_sha256"] != adapter_hash or
+                policy["adapter_sha256"] != adapter_hash or
                 saved["sam_sha256"] != self.config["sam"]["checkpoint_sha256"] or
-                self.policy["sam_sha256"] != self.config["sam"]["checkpoint_sha256"] or
-                self.policy["gate_baseline_source_sha256"] != gate_source_sha or
-                self.policy["selected_epoch"] != saved["epoch"]):
+                policy["sam_sha256"] != self.config["sam"]["checkpoint_sha256"] or
+                policy["gate_baseline_source_sha256"] != gate_source_sha or
+                policy["selected_epoch"] != saved["epoch"]):
             raise ValueError("SAM, adapter, gate and policy identifiers do not match")
-        if self.policy["mode"] not in ("off", "on", "selective"):
+        if policy["mode"] not in ("off", "on", "selective"):
             raise ValueError("Unknown selection policy mode")
-        self.gate = GateBaselineSAM().to(self.config["sam"]["device"])
-        self.gate.load_state_dict(saved["gate"])
-        self.gate.eval()
+        gate = GateBaselineSAM().to(self.config["sam"]["device"])
+        gate.load_state_dict(saved["gate"])
+        gate.eval()
+        self.gate_config, self.policy, self.gate = gate_config, policy, gate
 
     def predict(self, rgb, depth, valid, box, mode="selective"):
         if mode not in ("baseline", "fusion", "selective"):
@@ -52,6 +64,8 @@ class SelectivePredictorBaseline:
         available = depth is not None and valid is not None and bool(valid.any())
         if available and (depth.shape != rgb.shape[:2] or valid.shape != depth.shape):
             raise ValueError("RGB and depth are misaligned")
+        if mode == "selective" and available and self.policy is None:
+            self._load_gate()
         device = self.config["sam"]["device"]
         score = None
         use_adapter = False

@@ -19,6 +19,15 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _source_bytes(path: Path) -> bytes:
+    """Hash Python source identically after LF or CRLF checkout."""
+    return path.read_bytes().replace(b"\r\n", b"\n")
+
+
+def source_sha256(path: Path) -> str:
+    return hashlib.sha256(_source_bytes(path)).hexdigest()
+
+
 def preprocessing_signature(config: dict) -> str:
     digest = hashlib.sha256(json.dumps(config, sort_keys=True).encode())
     for path in ("selective_sam/data.py", "selective_sam/samples.py",
@@ -26,7 +35,7 @@ def preprocessing_signature(config: dict) -> str:
                  "selective_sam/gate.py", "selective_sam/label_generation.py",
                  "selective_sam/gate_dataset.py"):
         digest.update(path.encode())
-        digest.update(Path(path).read_bytes())
+        digest.update(_source_bytes(Path(path)))
     return digest.hexdigest()
 
 
@@ -34,7 +43,7 @@ def load_adapter(config: dict, checkpoint: Path) -> DepthSAM:
     saved = torch.load(checkpoint, map_location="cpu", weights_only=False)
     if saved["sam_sha256"] != config["sam"]["checkpoint_sha256"]:
         raise ValueError("Adapter checkpoint refers to another SAM checkpoint")
-    if saved.get("model_source_sha256") != sha256(Path("selective_sam/model.py")):
+    if saved.get("model_source_sha256") != source_sha256(Path("selective_sam/model.py")):
         raise ValueError("Adapter architecture source changed since checkpoint creation")
     if sha256(Path(config["sam"]["checkpoint"])) != config["sam"]["checkpoint_sha256"]:
         raise ValueError("Actual SAM checkpoint does not match configured SHA256")
@@ -58,7 +67,7 @@ def make_labels(config: dict, split: str, adapter_checkpoint: Path, gate_config:
     manifest_hash = sha256(Path("manifests") / f"{split}.jsonl")
     input_config = {key: gate_config[key] for key in
                     ("global_size", "local_size", "roi_margin_fraction", "roi_min_margin_px")}
-    roi_source_hash = sha256(Path("selective_sam/gate_roi.py"))
+    roi_source_hash = source_sha256(Path("selective_sam/gate_roi.py"))
     roi_config_hash = hashlib.sha256(json.dumps(input_config, sort_keys=True).encode()).hexdigest()
     began = time.time()
     with temp.open("w") as stream, torch.inference_mode():

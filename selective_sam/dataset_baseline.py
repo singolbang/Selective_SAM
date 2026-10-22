@@ -8,7 +8,7 @@ import torch
 
 from .dataset_sam import GateDatasetSAMROI, sam_cache_digest
 from .gate_baseline import baseline_hint
-from .label_generation import load_adapter, sha256
+from .label_generation import load_adapter, sha256, source_sha256
 from .samples import load_sample
 
 
@@ -31,9 +31,9 @@ class GateDatasetBaselineSAM(GateDatasetSAMROI):
             "adapter_sha256": adapter_hash,
             "manifest_sha256": sha256(Path("manifests") / f"{self.split}.jsonl"),
             "label_sha256": sha256(Path("cache/gate_labels") / f"{self.split}.jsonl"),
-            "model_source_sha256": sha256(Path("selective_sam/model.py")),
-            "hint_source_sha256": sha256(Path("selective_sam/gate_baseline.py")),
-            "dataset_source_sha256": sha256(Path("selective_sam/dataset_baseline.py")),
+            "model_source_sha256": source_sha256(Path("selective_sam/model.py")),
+            "hint_source_sha256": source_sha256(Path("selective_sam/gate_baseline.py")),
+            "dataset_source_sha256": source_sha256(Path("selective_sam/dataset_baseline.py")),
             "global_shape": [len(self.entries), size_global, size_global],
             "local_shape": [len(self.entries), size_local, size_local],
             "roi_margin_fraction": self.roi_config["roi_margin_fraction"],

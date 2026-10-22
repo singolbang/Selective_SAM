@@ -9,7 +9,7 @@ import torch
 
 from .dataset_roi import GateDatasetROI
 from .gate_sam import SAM_FEATURE_DIM, sam_box_feature
-from .label_generation import load_adapter, sha256
+from .label_generation import load_adapter, sha256, source_sha256
 from .samples import load_sample
 
 
@@ -33,9 +33,9 @@ class GateDatasetSAMROI(GateDatasetROI):
             "adapter_sha256": adapter_hash,
             "manifest_sha256": sha256(Path("manifests") / f"{self.split}.jsonl"),
             "label_sha256": sha256(Path("cache/gate_labels") / f"{self.split}.jsonl"),
-            "model_source_sha256": sha256(Path("selective_sam/model.py")),
-            "feature_source_sha256": sha256(Path("selective_sam/gate_sam.py")),
-            "dataset_source_sha256": sha256(Path("selective_sam/dataset_sam.py")),
+            "model_source_sha256": source_sha256(Path("selective_sam/model.py")),
+            "feature_source_sha256": source_sha256(Path("selective_sam/gate_sam.py")),
+            "dataset_source_sha256": source_sha256(Path("selective_sam/dataset_sam.py")),
             "shape": [len(self.entries), SAM_FEATURE_DIM],
         }
         expected = {"identity": identity, "digest": sam_cache_digest(identity)}

@@ -14,7 +14,7 @@ import yaml
 from .dataset_baseline import GateDatasetBaselineSAM
 from .gate_baseline import GateBaselineSAM
 from .gate_sam import SAM_FEATURE_DIM
-from .label_generation import sha256
+from .label_generation import sha256, source_sha256
 
 
 def choose_damage_policy(conditions, baseline, fusion, probabilities):
@@ -115,8 +115,8 @@ def main():
         if improved:
             best_score = selected["damaged_iou"]
             torch.save({"gate": model.state_dict(), "architecture": gate_config["architecture"],
-                        "gate_baseline_source_sha256": sha256(Path("selective_sam/gate_baseline.py")),
-                        "dataset_baseline_source_sha256": sha256(Path("selective_sam/dataset_baseline.py")),
+                        "gate_baseline_source_sha256": source_sha256(Path("selective_sam/gate_baseline.py")),
+                        "dataset_baseline_source_sha256": source_sha256(Path("selective_sam/dataset_baseline.py")),
                         "adapter_sha256": adapter_hash,
                         "sam_sha256": config["sam"]["checkpoint_sha256"],
                         "sam_source_commit": config["sam"]["official_code_commit"],
@@ -131,7 +131,7 @@ def main():
                 "validation_aggregation": gate_config["validation_aggregation"],
                 "adapter_sha256": adapter_hash,
                 "sam_sha256": config["sam"]["checkpoint_sha256"],
-                "gate_baseline_source_sha256": sha256(Path("selective_sam/gate_baseline.py")),
+                "gate_baseline_source_sha256": source_sha256(Path("selective_sam/gate_baseline.py")),
                 "selected_epoch": epoch + 1}, indent=2))
         record = {"epoch": epoch + 1, "loss": float(np.mean(losses)),
                   "selected": selected, "candidates": candidates, "best": improved}

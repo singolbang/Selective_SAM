@@ -14,7 +14,7 @@ from .corruption import corrupt_depth
 from .dataset_baseline import GateDatasetBaselineSAM
 from .gate_baseline import GateBaselineSAM
 from .infer_baseline import SelectivePredictorBaseline
-from .label_generation import sha256
+from .label_generation import sha256, source_sha256
 from .samples import adapter_depth, load_sample
 from .train_gate_baseline import predict_sam
 
@@ -87,7 +87,7 @@ def main():
     saved = torch.load("checkpoints/gate_best.pt", map_location="cpu", weights_only=False)
     if (policy["adapter_sha256"] != adapter_hash or saved["adapter_sha256"] != adapter_hash
             or saved.get("architecture") != "GateBaselineSAM_v1"
-            or saved["gate_baseline_source_sha256"] != sha256(Path("selective_sam/gate_baseline.py"))
+            or saved["gate_baseline_source_sha256"] != source_sha256(Path("selective_sam/gate_baseline.py"))
             or saved["gate_config"] != gate_config):
         raise ValueError("Adapter, selector, source or config mismatch")
     dataset = GateDatasetBaselineSAM("test", config, adapter_hash, gate_config)

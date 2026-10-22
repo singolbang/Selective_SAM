@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import yaml
 
 from .model import DepthSAM, binary_loss, iou_from_logits
+from .label_generation import source_sha256
 from .samples import (adapter_depth, load_sample, lowres_truth, pack_clean_sample,
                       read_manifest, unpack_clean_sample, load_rgb)
 
@@ -176,7 +177,7 @@ def main():
                         "sam_sha256": config["sam"]["checkpoint_sha256"],
                         "sam_source_commit": config["sam"]["official_code_commit"],
                         "deliver_source_commit": config["data"]["official_code_commit"],
-                        "model_source_sha256": hashlib.sha256(Path("selective_sam/model.py").read_bytes()).hexdigest(),
+                        "model_source_sha256": source_sha256(Path("selective_sam/model.py")),
                         "config_sha256": hashlib.sha256(Path(args.config).read_bytes()).hexdigest(),
                         "epoch": epoch + 1, "validation": metrics}, best_path)
         torch.save({"adapter": model.adapter.state_dict(), "optimizer": optimizer.state_dict(),

@@ -9,7 +9,7 @@ import torch
 
 from .corruption import corrupt_depth
 from .gate_roi import box_geometry, roi_input
-from .label_generation import sha256
+from .label_generation import sha256, source_sha256
 from .samples import load_sample
 from .gate_dataset import GateDataset
 
@@ -18,7 +18,7 @@ class GateDatasetROI(GateDataset):
     def __init__(self, split, config, adapter_hash, roi_config):
         super().__init__(split, config, adapter_hash)
         self.roi_config = roi_config
-        expected_source = sha256(Path("selective_sam/gate_roi.py"))
+        expected_source = source_sha256(Path("selective_sam/gate_roi.py"))
         input_config = {key: roi_config[key] for key in
                         ("global_size", "local_size", "roi_margin_fraction", "roi_min_margin_px")}
         expected_config = hashlib.sha256(
@@ -38,8 +38,8 @@ class GateDatasetROI(GateDataset):
         size = self.roi_config["local_size"]
         expected = {
             "label_sha256": sha256(Path("cache/gate_labels") / f"{self.split}.jsonl"),
-            "gate_roi_source_sha256": sha256(Path("selective_sam/gate_roi.py")),
-            "dataset_roi_source_sha256": sha256(Path("selective_sam/dataset_roi.py")),
+            "gate_roi_source_sha256": source_sha256(Path("selective_sam/gate_roi.py")),
+            "dataset_roi_source_sha256": source_sha256(Path("selective_sam/dataset_roi.py")),
             "local_size": size,
             "margin_fraction": self.roi_config["roi_margin_fraction"],
             "min_margin_px": self.roi_config["roi_min_margin_px"],
